@@ -922,8 +922,7 @@ async function analyzeAd(){
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/^#{1,3}\s+(.+)$/gm, '<br><strong style="font-size:14px;">$1</strong><br>')
       .replace(/^\d+\.\s+/gm, '<br>$&')
-      .replace(/
-/g, '<br>');
+      .replace(/\n/g, '<br>');
 
     result.innerHTML =
       '<div style="line-height:2;color:var(--text);">' + text + '</div>' +
