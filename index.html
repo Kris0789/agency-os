@@ -960,6 +960,7 @@ function addTeamMember(){
   const email = document.getElementById('tm-email').value.trim().toLowerCase();
   const pass = document.getElementById('tm-pass').value.trim();
   const msgEl = document.getElementById('add-member-msg');
+
   if(!name||!role||!email||!pass){
     msgEl.style.display='block'; msgEl.style.color='var(--red)';
     msgEl.textContent='Please fill all fields.'; return;
@@ -968,19 +969,49 @@ function addTeamMember(){
     msgEl.style.display='block'; msgEl.style.color='var(--red)';
     msgEl.textContent='This email is already registered.'; return;
   }
+
   const avMap={'Mediator':'av-blue','Copywriter':'av-purple','Designer':'av-teal','Digital Marketer':'av-pink','Video Editor':'av-red','Other':'av-green'};
   const newId = 'u'+Date.now();
   const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  USERS.push({id:newId, name, role, email, pass, isAdmin:false});
-  TEAM.push({id:newId, name, role, av:avMap[role]||'av-gray', initials});
+
+  const newUser = {id:newId, name, role, email, pass, isAdmin:false};
+  const newMember = {id:newId, name, role, av:avMap[role]||'av-green', initials};
+
+  USERS.push(newUser);
+  TEAM.push(newMember);
+
+  // Save to localStorage so login persists after refresh
+  saveTeamToStorage();
+
   ['tm-name','tm-email','tm-pass'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('tm-role').value='';
   msgEl.style.display='block'; msgEl.style.color='var(--green)';
-  msgEl.textContent='+ '+name+' added! They can now log in with '+email;
+  msgEl.textContent='✓ '+name+' added! They can now log in with '+email;
   setTimeout(()=>msgEl.style.display='none', 4000);
   renderMemberTable();
   renderTeam();
   populateSelects();
+}
+
+function saveTeamToStorage(){
+  try {
+    // Only save non-default members (ones added dynamically)
+    const defaultIds = ['sk','rv','pm','ad','ns'];
+    const extraUsers = USERS.filter(u => !defaultIds.includes(u.id));
+    const extraMembers = TEAM.filter(m => !defaultIds.includes(m.id));
+    localStorage.setItem('agencyos_extra_users', JSON.stringify(extraUsers));
+    localStorage.setItem('agencyos_extra_members', JSON.stringify(extraMembers));
+  } catch(e){ console.log('Storage save failed:', e); }
+}
+
+function loadTeamFromStorage(){
+  try {
+    const extraUsers = JSON.parse(localStorage.getItem('agencyos_extra_users') || '[]');
+    const extraMembers = JSON.parse(localStorage.getItem('agencyos_extra_members') || '[]');
+    extraUsers.forEach(u => { if(!USERS.find(x=>x.id===u.id)) USERS.push(u); });
+    extraMembers.forEach(m => { if(!TEAM.find(x=>x.id===m.id)) TEAM.push(m); });
+    console.log('Loaded', extraUsers.length, 'extra team members from storage');
+  } catch(e){ console.log('Storage load failed:', e); }
 }
 
 function renderMemberTable(){
@@ -1051,6 +1082,7 @@ function doLogout(){
 }
 
 document.addEventListener('DOMContentLoaded', function(){
+  loadTeamFromStorage(); // Load any saved team members first
   safeHide('sidebar-main');
   safeHide('main-topbar');
 });
