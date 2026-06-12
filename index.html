@@ -419,16 +419,12 @@ tr:hover td{background:var(--bg);}
     <div class="card" style="margin-bottom:16px;">
       <div class="card-title">Analyze a competitor ad from Meta Ad Library</div>
       <div style="background:var(--accent-light);border:1px solid #93c5fd;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:var(--accent);line-height:1.8;">
-        <strong>How it works:</strong> Go to Meta Ad Library, find a competitor ad running 30+ days, copy the link, paste below. AI fetches the ad and tells you why it works, who it targets, and how to beat it.
-      </div>
-      <div class="form-group">
-        <label>Your niche / industry</label>
-        <input type="text" id="niche-input" placeholder="e.g. Real estate Jaipur, Astrology app India, Ed-tech courses..."/>
+        <strong>How it works:</strong> Paste any Meta Ad Library link below. The AI will automatically detect the niche, extract the ad details, and tell you why it works, who it targets, and how to beat it.
       </div>
       <div class="form-group">
         <label>Meta Ad Library link</label>
         <input type="url" id="ad-url-input" placeholder="https://www.facebook.com/ads/library/?id=..."/>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Paste the full URL from facebook.com/ads/library</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Paste the full URL — niche and ad details are detected automatically</div>
       </div>
       <button class="btn btn-primary" onclick="analyzeAd()" id="analyze-btn">Analyze this ad &rarr;</button>
       <span id="analyze-spinner" style="display:none;font-size:12px;color:var(--muted);margin-left:12px;">&#9203; AI is analyzing...</span>
@@ -441,11 +437,10 @@ tr:hover td{background:var(--bg);}
           <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Step by step</div>
           <ol style="padding-left:16px;font-size:12px;color:var(--muted);line-height:2.4;">
             <li>Go to <a href="https://www.facebook.com/ads/library" target="_blank" style="color:var(--accent);">facebook.com/ads/library</a></li>
-            <li>Search your client's niche</li>
+            <li>Search any niche or brand</li>
             <li>Filter: Active ads only</li>
             <li>Click on a strong looking ad</li>
-            <li>Copy the URL from your browser</li>
-            <li>Paste above and click Analyze</li>
+            <li>Copy the URL and paste above</li>
           </ol>
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:14px;">
@@ -798,112 +793,120 @@ function renderCalendar(){
 
 // ══════════════════ TEAM ══════════════════
 
-function renderTeam(){
-  const members=TEAM.filter(m=>m.id!=='sk');
 
-  document.getElementById('team-cards').innerHTML=members.map(m=>{
-    const myTasks=TASKS.filter(t=>t.member===m.id);
-    const todo=myTasks.filter(t=>t.status==='todo').length;
-    const inprog=myTasks.filter(t=>t.status==='inprogress').length;
-    const overdue=myTasks.filter(t=>t.status==='overdue').length;
-    const done=myTasks.filter(t=>t.status==='done').length;
-    return `<div class="card" style="margin-bottom:0;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-        ${avEl(m,38)}
-        <div>
-          <div style="font-weight:600;font-size:14px;">${m.name}</div>
-          ${roleBadge(m.role)}
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:18px;font-weight:700;color:var(--accent);">${inprog}</div>
-          <div style="font-size:11px;color:var(--muted);">In progress</div>
-        </div>
-        <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:18px;font-weight:700;color:var(--muted);">${todo}</div>
-          <div style="font-size:11px;color:var(--muted);">To do</div>
-        </div>
-        <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:18px;font-weight:700;color:var(--red);">${overdue}</div>
-          <div style="font-size:11px;color:var(--muted);">Overdue</div>
-        </div>
-        <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:18px;font-weight:700;color:var(--green);">${done}</div>
-          <div style="font-size:11px;color:var(--muted);">Done</div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Feed
-  document.getElementById('team-feed').innerHTML=members.map(m=>{
-    const myTasks=TASKS.filter(t=>t.member===m.id);
-    const chips=myTasks.map(t=>`<span class="feed-task-chip ${t.status==='overdue'?'overdue':t.status==='inprogress'?'inprog':t.status==='done'?'done':''}">${t.title} · ${formatDate(t.due)}</span>`).join('');
-    return `<div class="feed-item">
-      <div class="feed-avatar">${avEl(m,36)}</div>
-      <div class="feed-body">
-        <div class="feed-header">
-          <span class="feed-name">${m.name}</span>
-          <span class="feed-role">${m.role}</span>
-          <span class="feed-time">${myTasks.length} tasks assigned</span>
-        </div>
-        <div class="feed-tasks">${chips||'<span style="font-size:12px;color:var(--muted);">No tasks assigned</span>'}</div>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Workload bars
-  const max=Math.max(...members.map(m=>TASKS.filter(t=>t.member===m.id&&t.status!=='done').length),1);
-  document.getElementById('workload-bars').innerHTML=members.map(m=>{
-    const active=TASKS.filter(t=>t.member===m.id&&t.status!=='done').length;
-    const pct=Math.round((active/max)*100);
-    const color=pct>75?'var(--red)':pct>50?'var(--amber)':'var(--accent)';
-    return `<div class="workload-row">
-      <div class="workload-name"><div style="display:flex;align-items:center;gap:7px;">${avEl(m,22)}<span>${m.name}</span></div></div>
-      <div class="workload-bar-track"><div class="workload-bar-fill" style="width:${pct}%;background:${color};"></div></div>
-      <div class="workload-count">${active} active</div>
-    </div>`;
-  }).join('');
-}
 
 // ══════════════════ AD INTELLIGENCE ══════════════════
 
 async function analyzeAd(){
-  const niche = document.getElementById('niche-input').value.trim();
   const adUrl = document.getElementById('ad-url-input').value.trim();
-  if(!niche){ alert('Please enter your niche.'); return; }
   if(!adUrl){ alert('Please paste a Meta Ad Library link.'); return; }
+  if(!adUrl.includes('facebook.com') && !adUrl.includes('fb.com')){
+    alert('Please paste a valid Meta Ad Library URL from facebook.com/ads/library'); return;
+  }
+
   const btn = document.getElementById('analyze-btn');
   const spinner = document.getElementById('analyze-spinner');
   const result = document.getElementById('insight-result');
-  btn.disabled = true; spinner.style.display = 'inline'; result.style.display = 'none';
+
+  btn.disabled = true;
+  spinner.style.display = 'inline';
+  result.style.display = 'none';
+
+  // Show analyzing steps to user
+  result.innerHTML = '<div style="color:var(--muted);font-size:13px;"><div>⏳ Fetching ad from Meta Ad Library...</div></div>';
+  result.style.display = 'block';
+
   try {
     const res = await fetch('https://hook.eu2.make.com/h0y2nzfd93do5m87ywk70n7rbd4tbxvf', {
-      method: 'POST', mode: 'cors',
+      method: 'POST',
+      mode: 'cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ niche, adUrl })
+      body: JSON.stringify({
+        adUrl: adUrl,
+        niche: 'auto-detect',
+        prompt: `You are a senior performance marketing strategist.
+
+A user has shared this Meta Ad Library URL: ${adUrl}
+
+This is the raw page content fetched from that URL. Please:
+
+1. AUTO-DETECT the niche/industry from the ad content
+2. Extract all ad details you can find
+3. Provide a full structured analysis
+
+Format your response exactly like this:
+
+**NICHE DETECTED:** [what industry/niche this ad is in]
+
+**AD DETAILS**
+- Advertiser:
+- Headline/Copy:
+- CTA:
+- Visual description:
+- Running since / Duration:
+- Regions running in:
+- Platforms:
+
+**WHY THIS AD IS WORKING**
+[2-3 specific psychological and marketing reasons]
+
+**TARGET AUDIENCE**
+[Age group, mindset, pain point, location]
+
+**HOOK FORMULA**
+[What grabs attention in the first 3 seconds]
+
+**LOCATION INSIGHTS**
+[Which regions it runs in most and why]
+
+**VIRAL POTENTIAL SCORE**
+[X/10 — with clear reason]
+
+**HOW TO BEAT THIS AD**
+1.
+2.
+3.
+
+**SUGGESTED BETTER HEADLINE**
+[Write one stronger headline for this niche]
+
+If the page content doesn't show clear ad data, analyze what you can and mention that Meta Ad Library may require login to show full details.`
+      })
     });
+
     const raw = await res.text();
     let text = '';
     try {
       const data = JSON.parse(raw);
       text = data.result || data.candidates?.[0]?.content?.parts?.[0]?.text || JSON.stringify(data);
     } catch(e) {
-      text = raw; // Use raw text if not JSON
+      text = raw;
     }
-    if(!text || text.trim() === '') throw new Error('Empty response from AI.');
+
+    if(!text || text.trim() === '') throw new Error('Empty response. The Make.com scenario may be off.');
+
+    // Format nicely
     text = text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^(\d+\.\s)/gm, '<br><strong>$1</strong>')
+      .replace(/^(\d+\.\s)/gm, '<br>$1')
       .replace(/\n/g, '<br>');
-    result.innerHTML = '<div style="line-height:2;">' + text + '</div><div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);">Powered by Gemini AI via Make.com</div>';
-    result.style.display = 'block';
+
+    result.innerHTML =
+      '<div style="line-height:2;">' + text + '</div>' +
+      '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);">Powered by Gemini AI via Make.com · <a href="' + adUrl + '" target="_blank" style="color:var(--accent);">View original ad</a></div>';
+
   } catch(e) {
-    result.innerHTML = '<div style="color:var(--red);font-size:13px;line-height:1.8;"><strong>Could not analyze.</strong><br>' + e.message + '</div>';
-    result.style.display = 'block';
+    let hint = '';
+    if(e.message.includes('Failed to fetch') || e.message.includes('CORS')){
+      hint = '<br><br>This is a CORS error. Make sure you are using the hosted version at agency-os-deploy-tau.vercel.app and not a local file.';
+    }
+    result.innerHTML =
+      '<div style="color:var(--red);font-size:13px;line-height:1.8;">' +
+      '<strong>Could not analyze this ad.</strong><br>' + e.message + hint + '</div>';
   }
-  btn.disabled = false; spinner.style.display = 'none';
+
+  btn.disabled = false;
+  spinner.style.display = 'none';
 }
 
 
