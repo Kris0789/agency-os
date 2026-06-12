@@ -714,38 +714,7 @@ const COLS=[
   {id:'done',label:'Done',color:'var(--green)'},
 ];
 
-function renderKanban(){
-  const fc=document.getElementById('filter-client').value;
-  const fm=document.getElementById('filter-member').value;
-  let tasks=[...TASKS];
-  if(fc) tasks=tasks.filter(t=>t.client===fc);
-  if(fm) tasks=tasks.filter(t=>t.member===fm);
 
-  document.getElementById('kanban-board').innerHTML=COLS.map(col=>{
-    const colTasks=tasks.filter(t=>t.status===col.id);
-    const cards=colTasks.map(t=>{
-      const m=getMember(t.member);
-      const days=daysUntil(t.due);
-      const urgentClass=days!==null&&days<=1?'urgent':'';
-      return `<div class="task-card">
-        <div class="task-title">${t.title}</div>
-        <div class="task-client">${t.client} · <span class="badge badge-gray" style="font-size:10px;">${t.category}</span></div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-          ${avEl(m,22)}
-          <span style="font-size:11px;color:var(--muted);">${m.name}</span>
-        </div>
-        <div class="task-footer">
-          <span class="task-due ${urgentClass}">${formatDate(t.due)}</span>
-          <div class="task-priority p-${t.priority}" title="${t.priority} priority"></div>
-        </div>
-      </div>`;
-    }).join('');
-    return `<div class="kanban-col">
-      <div class="kanban-col-title" style="color:${col.color};">${col.label}<span class="kanban-count">${colTasks.length}</span></div>
-      ${cards||`<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px 0;">Empty</div>`}
-    </div>`;
-  }).join('');
-}
 
 // ══════════════════ TASK MODAL ══════════════════
 
@@ -1184,12 +1153,17 @@ function openProfileModal(memberId){
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:${sec.color};margin-bottom:8px;">${sec.label} (${sec.tasks.length})</div>`;
     sec.tasks.forEach(task => {
       const isAdmin = currentUser && currentUser.isAdmin;
-      const isOwner = currentUser && currentUser.id === task.member;
+      const assignedMember = TEAM.find(m => m.id === task.member);
+      const isOwner = currentUser && (
+        currentUser.id === task.member ||
+        (assignedMember && currentUser.name === assignedMember.name)
+      );
+      const canAct = isOwner || isAdmin;
       let actions = '';
-      if(task.status === 'todo' && isOwner){
+      if(task.status === 'todo' && canAct){
         actions += `<button class="task-btn task-btn-progress" onclick="moveTask('${task.id}','inprogress');closeProfileModal();">Start</button>`;
       }
-      if(task.status === 'inprogress' && isOwner){
+      if(task.status === 'inprogress' && canAct){
         actions += `<button class="task-btn task-btn-done" onclick="moveTask('${task.id}','pendingapproval');closeProfileModal();">Mark Done</button>`;
       }
       if(task.status === 'pendingapproval' && isAdmin){
@@ -1286,7 +1260,6 @@ function renderKanban(){
   if(fm) tasks = tasks.filter(t => t.member === fm);
 
   const isAdmin = currentUser && currentUser.isAdmin;
-  const userId = currentUser ? currentUser.id : null;
 
   document.getElementById('kanban-board').innerHTML = COLS_V2.map(col => {
     const colTasks = tasks.filter(t => t.status === col.id);
@@ -1294,20 +1267,26 @@ function renderKanban(){
       const m = getMember(task.member);
       const days = daysUntil(task.due);
       const urgentClass = days !== null && days <= 1 ? 'urgent' : '';
-      const isOwner = userId === task.member;
+
+      // Check if current user is the assigned member (match by id or name)
+      const isOwner = currentUser && (
+        currentUser.id === task.member ||
+        (m && currentUser.name === m.name)
+      );
+      const canAct = isOwner || isAdmin;
 
       let actions = '';
-      if(col.id === 'todo' && (isOwner || isAdmin)){
+      if(col.id === 'todo' && canAct){
         actions += `<button class="task-btn task-btn-progress" onclick="moveTask('${task.id}','inprogress')">Start</button>`;
       }
-      if(col.id === 'inprogress' && (isOwner || isAdmin)){
+      if(col.id === 'inprogress' && canAct){
         actions += `<button class="task-btn task-btn-done" onclick="moveTask('${task.id}','pendingapproval')">Mark Done</button>`;
       }
       if(col.id === 'pendingapproval' && isAdmin){
-        actions += `<button class="task-btn task-btn-approve" onclick="moveTask('${task.id}','done')">Approve</button>`;
-        actions += `<button class="task-btn task-btn-reject" onclick="moveTask('${task.id}','inprogress')">Reject</button>`;
+        actions += `<button class="task-btn task-btn-approve" onclick="moveTask('${task.id}','done')">Approve ✓</button>`;
+        actions += `<button class="task-btn task-btn-reject" onclick="moveTask('${task.id}','inprogress')">Reject ✗</button>`;
       }
-      if(col.id === 'overdue' && (isOwner || isAdmin)){
+      if(col.id === 'overdue' && canAct){
         actions += `<button class="task-btn task-btn-progress" onclick="moveTask('${task.id}','inprogress')">Restart</button>`;
       }
 
