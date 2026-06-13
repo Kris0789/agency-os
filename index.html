@@ -1063,7 +1063,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // WHATSAPP CONFIG
 // ============================================================
 const SREEKANTH_WHATSAPP = '919347686275';
-const WHATSAPP_WEBHOOK = 'https://hook.eu2.make.com/h0y2nzfd93do5m87ywk70n7rbd4tbxvf';
+const WHATSAPP_WEBHOOK = 'https://hook.eu2.make.com/vg617r7mdskxt85upw5acltwgtayuw34';
 
 async function sendWhatsAppAlert(message){
   try {
@@ -1083,18 +1083,26 @@ function moveTask(taskId, newStatus){
   if(!task) return;
   const member = getMember(task.member);
 
-  if(newStatus === 'pendingapproval'){
-    task.status = 'pendingapproval';
-    // Send WhatsApp to Sreekanth
-    const msg = `AgencyOS Alert: ${member.name} has marked "${task.title}" as Done. Please verify and approve in the dashboard.`;
+  if(newStatus === 'inprogress' && task.status === 'todo'){
+    task.status = 'inprogress';
+    const msg = `AgencyOS Update: ${member.name} has started working on "${task.title}" (Client: ${task.client}). Status: In Progress.`;
     sendWhatsAppAlert(msg);
-    showToast(`Task sent for approval. Sreekanth will be notified on WhatsApp.`);
+    showToast('Task started! Sreekanth has been notified.');
+  } else if(newStatus === 'pendingapproval'){
+    task.status = 'pendingapproval';
+    const msg = `AgencyOS Alert: ${member.name} has completed "${task.title}" (Client: ${task.client}). Please verify and approve in the dashboard.`;
+    sendWhatsAppAlert(msg);
+    showToast('Task sent for approval. Sreekanth will be notified on WhatsApp.');
   } else if(newStatus === 'done'){
     task.status = 'done';
+    const msg = `AgencyOS: "${task.title}" (Client: ${task.client}) has been approved and marked as Done.`;
+    sendWhatsAppAlert(msg);
     showToast('Task approved and marked as Done!');
   } else if(newStatus === 'inprogress'){
     task.status = 'inprogress';
-    showToast('Task moved back to In Progress.');
+    const msg = `AgencyOS: "${task.title}" (Client: ${task.client}) was rejected and sent back to In Progress.`;
+    sendWhatsAppAlert(msg);
+    showToast('Task rejected and moved back to In Progress.');
   } else {
     task.status = newStatus;
   }
